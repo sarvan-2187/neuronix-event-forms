@@ -4,19 +4,25 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 
+/* ---------- LINK VALIDATOR ---------- */
+const isValidLink = (link: string) =>
+    link.startsWith("http://") || link.startsWith("https://");
+
 export default function CreateEventPage() {
-    const router = useRouter(); // ✅ hook at top level
+    const router = useRouter();
 
     const [form, setForm] = useState({
         title: "",
         description: "",
         registration_link: "",
         banner_url: "",
+        prize_money: "",
+        event_dates: "",
     });
 
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState("");
-    const [resultColor, setResultColor] = useState("");
+    const [resultColor, setResultColor] = useState("text-yellow-300");
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -26,6 +32,20 @@ export default function CreateEventPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        /* ---------- CLIENT VALIDATION ---------- */
+        if (!isValidLink(form.registration_link)) {
+            setResult("Invalid registration link. Must start with http:// or https://");
+            setResultColor("text-red-400");
+            return;
+        }
+
+        if (!isValidLink(form.banner_url)) {
+            setResult("Invalid banner image URL. Must start with http:// or https://");
+            setResultColor("text-red-400");
+            return;
+        }
+
         setLoading(true);
         setResult("Submitting event...");
         setResultColor("text-yellow-300");
@@ -38,21 +58,21 @@ export default function CreateEventPage() {
             });
 
             if (res.status === 200) {
-                setResult("✅ Event created successfully");
+                setResult("Event created successfully");
                 setResultColor("text-green-400");
 
                 setTimeout(() => {
                     router.push("/event-submitted");
                 }, 1200);
             } else if (res.status === 401) {
-                setResult("❌ Unauthorized. Please login again.");
+                setResult("Unauthorized. Please login again.");
                 setResultColor("text-red-400");
             } else {
-                setResult("❌ Something went wrong. Try again.");
+                setResult("Something went wrong. Try again.");
                 setResultColor("text-red-400");
             }
         } catch {
-            setResult("❌ Network error. Please try again.");
+            setResult("Network error. Please try again.");
             setResultColor("text-red-400");
         }
 
@@ -85,8 +105,7 @@ export default function CreateEventPage() {
                             name="title"
                             value={form.title}
                             onChange={handleChange}
-                            placeholder="Neuronix AI Bootcamp"
-                            className="w-full rounded-xl bg-black/50 border border-yellow-500/25 px-4 py-3 text-neutral-200 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                            className="w-full rounded-xl bg-black/50 border border-yellow-500/25 px-4 py-3 text-neutral-200"
                             required
                         />
                     </div>
@@ -101,16 +120,13 @@ export default function CreateEventPage() {
                             value={form.description}
                             onChange={handleChange}
                             rows={5}
-                            placeholder="Describe the event, audience, and highlights..."
-                            className="w-full rounded-xl bg-black/50 border border-yellow-500/25 px-4 py-3 text-neutral-200 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                            className="w-full rounded-xl bg-black/50 border border-yellow-500/25 px-4 py-3 text-neutral-200"
                             required
                         />
                     </div>
 
-                    {/* LINKS GRID */}
+                    {/* LINKS */}
                     <div className="grid md:grid-cols-2 gap-6">
-
-                        {/* REGISTRATION LINK */}
                         <div>
                             <label className="block text-sm font-medium text-yellow-300 mb-2">
                                 Registration Link
@@ -120,12 +136,11 @@ export default function CreateEventPage() {
                                 value={form.registration_link}
                                 onChange={handleChange}
                                 placeholder="https://forms.gle/..."
-                                className="w-full rounded-xl bg-black/50 border border-yellow-500/25 px-4 py-3 text-neutral-200 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                className="w-full rounded-xl bg-black/50 border border-yellow-500/25 px-4 py-3 text-neutral-200"
                                 required
                             />
                         </div>
 
-                        {/* BANNER URL */}
                         <div>
                             <label className="block text-sm font-medium text-yellow-300 mb-2">
                                 Banner Image URL
@@ -135,8 +150,36 @@ export default function CreateEventPage() {
                                 value={form.banner_url}
                                 onChange={handleChange}
                                 placeholder="https://images.unsplash.com/..."
-                                className="w-full rounded-xl bg-black/50 border border-yellow-500/25 px-4 py-3 text-neutral-200 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                className="w-full rounded-xl bg-black/50 border border-yellow-500/25 px-4 py-3 text-neutral-200"
                                 required
+                            />
+                        </div>
+                    </div>
+
+                    {/* EVENT META */}
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-yellow-300 mb-2">
+                                Event Dates
+                            </label>
+                            <input
+                                name="event_dates"
+                                value={form.event_dates}
+                                onChange={handleChange}
+                                className="w-full rounded-xl bg-black/50 border border-yellow-500/25 px-4 py-3 text-neutral-200"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-yellow-300 mb-2">
+                                Prize Money
+                            </label>
+                            <input
+                                name="prize_money"
+                                value={form.prize_money}
+                                onChange={handleChange}
+                                className="w-full rounded-xl bg-black/50 border border-yellow-500/25 px-4 py-3 text-neutral-200"
                             />
                         </div>
                     </div>
@@ -145,20 +188,19 @@ export default function CreateEventPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-4 bg-gradient-to-r from-yellow-500 to-yellow-300 text-black font-semibold rounded-2xl shadow-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-4 bg-gradient-to-r from-yellow-500 to-yellow-300 text-black font-semibold rounded-2xl disabled:opacity-50"
                     >
                         {loading ? "Submitting Event..." : "Publish Event"}
                     </button>
 
-                    {/* RESULT MESSAGE */}
+                    {/* RESULT */}
                     <AnimatePresence mode="wait">
                         {result && (
                             <motion.p
                                 key={result}
-                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.97, y: 6 }}
-                                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 6 }}
                                 className={`text-center font-medium ${resultColor}`}
                             >
                                 {result}
@@ -170,5 +212,4 @@ export default function CreateEventPage() {
             </div>
         </section>
     );
-
 }
