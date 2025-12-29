@@ -21,7 +21,7 @@ export default function LoginPage() {
         });
 
         if (res?.ok) {
-            router.push("/view-applicants");
+            router.push("/create-event");
         } else {
             setError("Invalid credentials");
         }
@@ -75,3 +75,4 @@ export default function LoginPage() {
         </div>
     );
 }
+
