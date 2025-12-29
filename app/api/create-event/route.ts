@@ -9,23 +9,33 @@ const pool = new Pool({
 });
 
 export async function POST(req: Request) {
-  // 🔐 Auth check
   const session = await getServerSession(authOptions);
+
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
   }
 
   try {
     const body = await req.json();
 
-    const { title, description, registration_link, banner_url } = body;
+    const {
+      title,
+      description,
+      registration_link,
+      banner_url,
+      prize_money,
+      event_dates,
+    } = body;
 
-    // 🧠 SIMPLE validation (no Zod)
     if (
       !title ||
       !description ||
       !registration_link ||
-      !banner_url
+      !banner_url ||
+      !event_dates
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -34,10 +44,20 @@ export async function POST(req: Request) {
     }
 
     const result = await pool.query(
-      `INSERT INTO events (title, description, registration_link, banner_url)
-       VALUES ($1, $2, $3, $4)
-       RETURNING *`,
-      [title, description, registration_link, banner_url]
+      `
+      INSERT INTO events
+      (title, description, registration_link, banner_url, prize_money, event_dates)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *
+      `,
+      [
+        title,
+        description,
+        registration_link,
+        banner_url,
+        prize_money || null,
+        event_dates,
+      ]
     );
 
     return NextResponse.json({
@@ -46,6 +66,7 @@ export async function POST(req: Request) {
     });
   } catch (error: any) {
     console.error("API ERROR:", error);
+
     return NextResponse.json(
       { error: "Server error" },
       { status: 500 }
